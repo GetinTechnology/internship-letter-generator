@@ -53,7 +53,8 @@ if st.button("Generate"):
                         st.download_button(
                             label="📥 Download Merged Report",
                             data=tmpfile,
-                            file_name="Payments_Received_With_Branch.xlsx"
+                            file_name="Payments_Received_With_Branch.xlsx",
+                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                         )
                 else:
                     st.error("❌ Error: 'Invoice #' column not found in both files.")
