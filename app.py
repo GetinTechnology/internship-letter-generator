@@ -111,8 +111,8 @@ if st.button("Generate"):
                                     'position': row['Position'],
                                     'start_date': row['Start Date'].strftime("%d %B %Y"),
                                     'end_date': row['End Date'].strftime("%d %B %Y"),
-                                    'pronoun_subject': pronouns['pronoun_subject'],
-                                    'pronoun_object': pronouns['pronoun_object'],
+                                     'pronoun_subject': pronouns['pronoun_subject'],
+                                     'pronoun_object': pronouns['pronoun_object'],
                                     'pronoun_possessive': pronouns['pronoun_possessive'],
                                 }
                                 doc.render(context)
