@@ -46,16 +46,19 @@ if st.button("Generate"):
                         how='left'
                     )
 
+                    # Create a temporary file to save the merged report
                     with tempfile.NamedTemporaryFile(delete=False, suffix='.xlsx') as tmpfile:
                         merged_df.to_excel(tmpfile.name, index=False)
                         tmpfile.seek(0)
-                        st.success("✅ Merge complete!")
-                        st.download_button(
-                            label="📥 Download Merged Report",
-                            data=tmpfile,
-                            file_name="Payments_Received_With_Branch.xlsx",
-                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                        )
+                        # Open the file and send its binary data to the download button
+                        with open(tmpfile.name, "rb") as f:
+                            st.success("✅ Merge complete!")
+                            st.download_button(
+                                label="📥 Download Merged Report",
+                                data=f,
+                                file_name="Payments_Received_With_Branch.xlsx",
+                                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                            )
                 else:
                     st.error("❌ Error: 'Invoice #' column not found in both files.")
 
