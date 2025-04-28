@@ -27,6 +27,28 @@ else:
     excel_file = st.file_uploader("Upload Excel File", type=["xlsx"], key="excel_"+module)
     template_file = st.file_uploader("Upload Word Template (DOCX)", type=["docx"], key="template_"+module)
 
+def get_pronouns(gender):
+    if isinstance(gender, str):
+        gender = gender.lower()
+        if gender == "male":
+            return {
+                "pronoun_subject": "he",
+                "pronoun_object": "him",
+                "pronoun_possessive": "his",
+            }
+        elif gender == "female":
+            return {
+                "pronoun_subject": "she",
+                "pronoun_object": "her",
+                "pronoun_possessive": "her",
+            }
+    # Default (for non-binary, unknown, or missing)
+    return {
+        "pronoun_subject": "they",
+        "pronoun_object": "them",
+        "pronoun_possessive": "their",
+    }
+
 if st.button("Generate"):
     try:
         if module == "Payments Report Merge":
@@ -79,8 +101,7 @@ if st.button("Generate"):
                             for _, row in df.iterrows():
                                 doc = DocxTemplate(template_file)
 
-                                pronoun = "he" if row.get('Gender', '').lower() == "male" else "she"
-                                pronoun_cap = pronoun.capitalize()
+                                pronouns = get_pronouns(row.get('Gender', ''))
 
                                 context = {
                                     'date': today_date,
@@ -90,8 +111,9 @@ if st.button("Generate"):
                                     'position': row['Position'],
                                     'start_date': row['Start Date'].strftime("%d %B %Y"),
                                     'end_date': row['End Date'].strftime("%d %B %Y"),
-                                    'pronoun': pronoun,
-                                    'pronoun_cap': pronoun_cap,
+                                    'pronoun_subject': pronouns['pronoun_subject'],
+                                    'pronoun_object': pronouns['pronoun_object'],
+                                    'pronoun_possessive': pronouns['pronoun_possessive'],
                                 }
                                 doc.render(context)
                                 filename = f"{row['Name'].replace(' ', '_')}_Completion_Certificate.docx"
