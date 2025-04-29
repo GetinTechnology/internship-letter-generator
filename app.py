@@ -17,7 +17,8 @@ module = st.selectbox("Choose a Module", [
     "Infonel - Intern Acceptance Letter",
     "Infonel - Intern Completion Letter",
     "Payments Report Merge",
-    "Amount Open Merge"
+    "Amount Open Merge",
+     "Invoice Merge - Amount Open, Amount with Tax, Discount Merge"
 ])
 
 # Step 2: Upload files
@@ -25,6 +26,9 @@ if module == "Payments Report Merge":
     invoice_file = st.file_uploader("Upload 'Invoices Report' Excel", type=["xlsx"], key="invoice_"+module)
     payment_file = st.file_uploader("Upload 'Payments Received' Excel", type=["xlsx"], key="payment_"+module)
 elif module == "Amount Open Merge":
+    invoice_file = st.file_uploader("Upload 'Invoices' Excel", type=["xlsx"], key="invoice_"+module)
+    report_file = st.file_uploader("Upload 'Invoices Report' Excel", type=["xlsx"], key="report_"+module)
+elif module == "Invoice Merge - Amount Open, Amount with Tax, Discount Merge":
     invoice_file = st.file_uploader("Upload 'Invoices' Excel", type=["xlsx"], key="invoice_"+module)
     report_file = st.file_uploader("Upload 'Invoices Report' Excel", type=["xlsx"], key="report_"+module)
 else:
@@ -69,7 +73,45 @@ if st.button("Generate"):
                                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
                 else:
                     st.error("❌ Error: 'Invoice #' column not found in both files.")
+                    
+        elif module == "Invoice Merge - Amount Open, Amount with Tax, Discount Merge":
+            if not invoice_file or not report_file:
+                st.warning("Please upload both Invoices and Invoices Report files.")
+            else:
+                invoices_df = pd.read_excel(invoice_file, header=1)
+                invoices_report_df = pd.read_excel(report_file, header=1)
 
+                invoices_df.columns = invoices_df.columns.str.strip().str.lower()
+                invoices_report_df.columns = invoices_report_df.columns.str.strip().str.lower()
+
+                if 'amount' in invoices_df.columns:
+                    invoices_df.rename(columns={'amount': 'amount with tax'}, inplace=True)
+
+                required_columns = ['invoice #', 'amount', 'discount', 'adjustment', 'amount open']
+                missing = [col for col in required_columns if col not in invoices_report_df.columns]
+                if missing:
+                    st.error(f"❌ Error: Missing columns in Invoices Report: {missing}")
+                else:
+                    merge_df = invoices_report_df[required_columns]
+                    merged_df = invoices_df.merge(merge_df, on='invoice #', how='left')
+
+                    columns_to_remove = ['total tax', 'year', 'project', 'tags']
+                    merged_df.drop(columns=[col for col in columns_to_remove if col in merged_df.columns], inplace=True)
+
+                    merged_df.columns = [col.title() for col in merged_df.columns]
+
+                    with tempfile.NamedTemporaryFile(delete=False, suffix='.xlsx') as tmpfile:
+                        merged_df.to_excel(tmpfile.name, index=False)
+                        tmpfile.seek(0)
+                        with open(tmpfile.name, "rb") as f:
+                            st.success("✅ Merged successfully!")
+                            st.download_button(
+                                label="📥 Download Merged Excel",
+                                data=f,
+                                file_name="Invoices_With_All_Merged.xlsx",
+                                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                            )
+                            
         elif module == "Amount Open Merge":
             if not invoice_file or not report_file:
                 st.warning("Please upload both Invoices and Invoices Report files.")
