@@ -167,89 +167,7 @@ if st.button("Generate"):
                     zip_path = os.path.join(tmpdir, f"{module.replace(' ', '_')}_certificates.zip")
                     with zipfile.ZipFile(zip_path, "w") as zipf:
 
-                        if module == "Getin - Intern Acceptance":
-                            for _, row in df.iterrows():
-                                doc = DocxTemplate(template_file)
-                                pronouns = get_pronouns(row.get('Gender', ''))
-                                context = {
-                                    'date': today_date,
-                                    'name': row['Name'].title(),
-                                    'roll_no': row['Roll No'],
-                                    'college': row['College Name'],
-                                    'position': row['Position'],
-                                    'pronoun_subject': pronouns['pronoun_subject'],
-                                    'pronoun_object': pronouns['pronoun_object'],
-                                    'pronoun_possessive': pronouns['pronoun_possessive'],
-                                }
-                                doc.render(context)
-                                filename = f"{row['Name'].replace(' ', '_')}_Acceptance_Letter.docx"
-                                filepath = os.path.join(tmpdir, filename)
-                                doc.save(filepath)
-
-                                # Convert DOCX to PDF
-                                pdf_filepath = os.path.splitext(filepath)[0] + ".pdf"
-                                convert_docx_to_pdf(filepath, tmpdir)
-
-                                zipf.write(filepath, os.path.basename(filepath))
-                                zipf.write(pdf_filepath, os.path.basename(pdf_filepath))
-
-                        elif module == "Infonel - Intern Acceptance Letter":
-                            for _, row in df.iterrows():
-                                doc = DocxTemplate(template_file)
-                                pronouns = get_pronouns(row.get('Gender', ''))
-                                context = {
-                                    'date': today_date,
-                                    'name': row['Name'].title(),
-                                    'roll_no': row['Roll No'],
-                                    'college': row['College Name'],
-                                    'position': row['Position'],
-                                    'pronoun_subject': pronouns['pronoun_subject'],
-                                    'pronoun_object': pronouns['pronoun_object'],
-                                    'pronoun_possessive': pronouns['pronoun_possessive'],
-                                }
-                                doc.render(context)
-                                filename = f"{row['Name'].replace(' ', '_')}_Acceptance_Letter_Infonel.docx"
-                                filepath = os.path.join(tmpdir, filename)
-                                doc.save(filepath)
-
-                                # Convert DOCX to PDF
-                                pdf_filepath = os.path.splitext(filepath)[0] + ".pdf"
-                                convert_docx_to_pdf(filepath, tmpdir)
-
-                                zipf.write(filepath, os.path.basename(filepath))
-                                zipf.write(pdf_filepath, os.path.basename(pdf_filepath))
-
-                        elif module == "Infonel - Intern Completion Letter":
-                            df['Start Date'] = pd.to_datetime(df['Start Date'], format='%d %B %Y')
-                            df['End Date'] = pd.to_datetime(df['End Date'], format='%d %B %Y')
-                            for _, row in df.iterrows():
-                                doc = DocxTemplate(template_file)
-                                pronouns = get_pronouns(row.get('Gender', ''))
-                                context = {
-                                    'date': today_date,
-                                    'name': row['Name'].title(),
-                                    'roll_no': row['Roll No'],
-                                    'college': row['College Name'],
-                                    'position': row['Position'],
-                                    'start_date': row['Start Date'].strftime("%d %B %Y"),
-                                    'end_date': row['End Date'].strftime("%d %B %Y"),
-                                    'pronoun_subject': pronouns['pronoun_subject'],
-                                    'pronoun_object': pronouns['pronoun_object'],
-                                    'pronoun_possessive': pronouns['pronoun_possessive'],
-                                }
-                                doc.render(context)
-                                filename = f"{row['Name'].replace(' ', '_')}_Completion_Letter_Infonel.docx"
-                                filepath = os.path.join(tmpdir, filename)
-                                doc.save(filepath)
-
-                                # Convert DOCX to PDF
-                                pdf_filepath = os.path.splitext(filepath)[0] + ".pdf"
-                                convert_docx_to_pdf(filepath, tmpdir)
-
-                                zipf.write(filepath, os.path.basename(filepath))
-                                zipf.write(pdf_filepath, os.path.basename(pdf_filepath))
-
-                        elif module == "Getin - Intern Completion Letter":
+                        if module == "Getin - Intern Completion Letter":
                             df['Start Date'] = pd.to_datetime(df['Start Date'], format='%d %B %Y')
                             df['End Date'] = pd.to_datetime(df['End Date'], format='%d %B %Y')
                             for _, row in df.iterrows():
@@ -272,13 +190,110 @@ if st.button("Generate"):
                                 filepath = os.path.join(tmpdir, filename)
                                 doc.save(filepath)
 
-                                # Convert DOCX to PDF
-                                pdf_filepath = os.path.splitext(filepath)[0] + ".pdf"
-                                convert_docx_to_pdf(filepath, tmpdir)
+                                # Convert DOCX to PDF and save both DOCX and PDF in the zip file
+                                pdf_buffer = docx_to_pdf(filepath)
+                                pdf_filename = f"{row['Name'].replace(' ', '_')}_Completion_Certificate.pdf"
+                                with open(pdf_filename, 'wb') as pdf_file:
+                                    pdf_file.write(pdf_buffer.read())
 
-                                zipf.write(filepath, os.path.basename(filepath))
-                                zipf.write(pdf_filepath, os.path.basename(pdf_filepath))
+                                zipf.write(filepath, arcname=filename)
+                                zipf.write(pdf_filename, arcname=pdf_filename)
 
+                        elif module == "Getin - Intern Acceptance":
+                            df['Start Date'] = pd.to_datetime(df['Start Date'], format='%d %B %Y')
+                            df['End Date'] = pd.to_datetime(df['End Date'], format='%d %B %Y')
+                            for _, row in df.iterrows():
+                                doc = DocxTemplate(template_file)
+                                pronouns = get_pronouns(row.get('Gender', ''))
+                                context = {
+                                    'date': today_date,
+                                    'name': row['Name'].title(),
+                                    'roll_no': row['Roll No'],
+                                    'college': row['College Name'],
+                                    'position': row['Position'],
+                                    'start_date': row['Start Date'].strftime("%d %B %Y"),
+                                    'end_date': row['End Date'].strftime("%d %B %Y"),
+                                    'pronoun_subject': pronouns['pronoun_subject'],
+                                    'pronoun_object': pronouns['pronoun_object'],
+                                    'pronoun_possessive': pronouns['pronoun_possessive'],
+                                }
+                                doc.render(context)
+                                filename = f"{row['Name'].replace(' ', '_')}_Acceptance_Certificate.docx"
+                                filepath = os.path.join(tmpdir, filename)
+                                doc.save(filepath)
+
+                                # Convert DOCX to PDF and save both DOCX and PDF in the zip file
+                                pdf_buffer = docx_to_pdf(filepath)
+                                pdf_filename = f"{row['Name'].replace(' ', '_')}_Acceptance_Certificate.pdf"
+                                with open(pdf_filename, 'wb') as pdf_file:
+                                    pdf_file.write(pdf_buffer.read())
+
+                                zipf.write(filepath, arcname=filename)
+                                zipf.write(pdf_filename, arcname=pdf_filename)
+
+                        elif module == "Infonel - Intern Acceptance Letter":
+                            df['Start Date'] = pd.to_datetime(df['Start Date'], format='%d %B %Y')
+                            df['End Date'] = pd.to_datetime(df['End Date'], format='%d %B %Y')
+                            for _, row in df.iterrows():
+                                doc = DocxTemplate(template_file)
+                                pronouns = get_pronouns(row.get('Gender', ''))
+                                context = {
+                                    'date': today_date,
+                                    'name': row['Name'].title(),
+                                    'roll_no': row['Roll No'],
+                                    'college': row['College Name'],
+                                    'position': row['Position'],
+                                    'start_date': row['Start Date'].strftime("%d %B %Y"),
+                                    'end_date': row['End Date'].strftime("%d %B %Y"),
+                                    'pronoun_subject': pronouns['pronoun_subject'],
+                                    'pronoun_object': pronouns['pronoun_object'],
+                                    'pronoun_possessive': pronouns['pronoun_possessive'],
+                                }
+                                doc.render(context)
+                                filename = f"{row['Name'].replace(' ', '_')}_Acceptance_Letter.docx"
+                                filepath = os.path.join(tmpdir, filename)
+                                doc.save(filepath)
+
+                                # Convert DOCX to PDF and save both DOCX and PDF in the zip file
+                                pdf_buffer = docx_to_pdf(filepath)
+                                pdf_filename = f"{row['Name'].replace(' ', '_')}_Acceptance_Letter.pdf"
+                                with open(pdf_filename, 'wb') as pdf_file:
+                                    pdf_file.write(pdf_buffer.read())
+
+                                zipf.write(filepath, arcname=filename)
+                                zipf.write(pdf_filename, arcname=pdf_filename)
+
+                        elif module == "Infonel - Intern Completion Letter":
+                            df['Start Date'] = pd.to_datetime(df['Start Date'], format='%d %B %Y')
+                            df['End Date'] = pd.to_datetime(df['End Date'], format='%d %B %Y')
+                            for _, row in df.iterrows():
+                                doc = DocxTemplate(template_file)
+                                pronouns = get_pronouns(row.get('Gender', ''))
+                                context = {
+                                    'date': today_date,
+                                    'name': row['Name'].title(),
+                                    'roll_no': row['Roll No'],
+                                    'college': row['College Name'],
+                                    'position': row['Position'],
+                                    'start_date': row['Start Date'].strftime("%d %B %Y"),
+                                    'end_date': row['End Date'].strftime("%d %B %Y"),
+                                    'pronoun_subject': pronouns['pronoun_subject'],
+                                    'pronoun_object': pronouns['pronoun_object'],
+                                    'pronoun_possessive': pronouns['pronoun_possessive'],
+                                }
+                                doc.render(context)
+                                filename = f"{row['Name'].replace(' ', '_')}_Completion_Letter.docx"
+                                filepath = os.path.join(tmpdir, filename)
+                                doc.save(filepath)
+
+                                # Convert DOCX to PDF and save both DOCX and PDF in the zip file
+                                pdf_buffer = docx_to_pdf(filepath)
+                                pdf_filename = f"{row['Name'].replace(' ', '_')}_Completion_Letter.pdf"
+                                with open(pdf_filename, 'wb') as pdf_file:
+                                    pdf_file.write(pdf_buffer.read())
+
+                                zipf.write(filepath, arcname=filename)
+                                zipf.write(pdf_filename, arcname=pdf_filename)
                     # Provide the ZIP download link
                     with open(zip_path, "rb") as f:
                         st.download_button(
