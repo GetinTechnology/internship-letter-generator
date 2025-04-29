@@ -257,7 +257,7 @@ if st.button("Generate"):
 
                     with open(zip_path, "rb") as f:
                         st.success("✅ Letters generated successfully!")
-                        st.download_button("\ud83d\udcc5 Download All Letters (ZIP)", data=f, file_name=f"{module.replace(' ', '_')}_Letters.zip")
+                        st.download_button("📥 Download All Letters (ZIP)", data=f, file_name=f"{module.replace(' ', '_')}_Letters.zip")
 
     except Exception as e:
         st.error(f"❌ Error: {e}")
