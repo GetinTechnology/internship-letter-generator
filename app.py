@@ -6,7 +6,10 @@ import os
 import zipfile
 import tempfile
 import re
-import subprocess
+from io import BytesIO
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from docx import Document
 
 st.set_page_config(page_title="Internship Letter & Report Generator", layout="centered")
 st.title("📄 Internship Letter & Report Generator")
@@ -45,15 +48,6 @@ def get_pronouns(gender):
             return {"pronoun_subject": "she", "pronoun_object": "her", "pronoun_possessive": "her"}
     return {"pronoun_subject": "they", "pronoun_object": "them", "pronoun_possessive": "their"}
 
-def convert_docx_to_pdf(docx_path, pdf_path):
-    command = [
-        "libreoffice",
-        "--headless",        # Run in headless mode (no GUI)
-        "--convert-to", "pdf",  # Convert to PDF format
-        "--outdir", pdf_path,  # Specify the output directory
-        docx_path            # Input DOCX file
-    ]
-    subprocess.run(command, check=True)
 
 if st.button("Generate"):
     try:
