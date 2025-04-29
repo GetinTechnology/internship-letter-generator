@@ -11,6 +11,21 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from docx import Document
 
+
+def docx_to_pdf(docx_file):
+    document = Document(docx_file)
+    pdf_buffer = BytesIO()
+    c = canvas.Canvas(pdf_buffer, pagesize=letter)
+
+    text = ''
+    for para in document.paragraphs:
+        text += para.text + '\n'
+
+    c.drawString(100, 750, text)  # Add text to the PDF at a specific location
+    c.save()
+    pdf_buffer.seek(0)
+    return pdf_buffer
+
 st.set_page_config(page_title="Internship Letter & Report Generator", layout="centered")
 st.title("📄 Internship Letter & Report Generator")
 
