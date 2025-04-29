@@ -6,6 +6,7 @@ import os
 import zipfile
 import tempfile
 import re
+from docx2pdf import convert
 
 st.set_page_config(page_title="Internship Letter & Report Generator", layout="centered")
 st.title("📄 Internship Letter & Report Generator")
@@ -178,7 +179,13 @@ if st.button("Generate"):
                                 filename = f"{row['Name'].replace(' ', '_')}_Completion_Certificate.docx"
                                 filepath = os.path.join(tmpdir, filename)
                                 doc.save(filepath)
+
+                                # Convert to PDF
+                                pdf_filepath = filepath.replace('.docx', '.pdf')
+                                convert(filepath, pdf_filepath)
+                                
                                 zipf.write(filepath, arcname=filename)
+                                zipf.write(pdf_filepath, arcname=filename.replace('.docx', '.pdf'))
 
                         elif module == "Getin - Intern Acceptance":
                             df['Start Date'] = pd.to_datetime(df['Start Date'], format='%d %B %Y')
@@ -202,62 +209,74 @@ if st.button("Generate"):
                                 filename = f"{row['Name'].replace(' ', '_')}_Internship_Letter.docx"
                                 filepath = os.path.join(tmpdir, filename)
                                 doc.save(filepath)
+
+                                # Convert to PDF
+                                pdf_filepath = filepath.replace('.docx', '.pdf')
+                                convert(filepath, pdf_filepath)
+
                                 zipf.write(filepath, arcname=filename)
+                                zipf.write(pdf_filepath, arcname=filename.replace('.docx', '.pdf'))
 
                         elif module == "Infonel - Intern Acceptance Letter":
                             df['Start Date'] = pd.to_datetime(df['Start Date'])
                             df['End Date'] = pd.to_datetime(df['End Date'])
-                            base_id = 600
                             for _, row in df.iterrows():
                                 doc = DocxTemplate(template_file)
-                                clean_name = re.sub(r'[^a-zA-Z\s]', '', row['Name']).title()
                                 context = {
                                     'date': today_date,
-                                    'certificate_id': f"INT/VNR{base_id:03d}",
-                                    'name': clean_name,
+                                    'name': row['Name'].title(),
                                     'roll_no': row['Roll No'],
-                                    'college_name': row['College Name'],
-                                    'college_location': row['College Location'],
-                                    'college_pincode': row['College Pincode'],
-                                    'position': row['Position'].title(),
-                                    'start_date': row['Start Date'].strftime("%d/%m/%Y"),
-                                    'end_date': row['End Date'].strftime("%d/%m/%Y"),
+                                    'position': row['Position'],
+                                    'start_date': row['Start Date'].strftime("%d %B %Y"),
+                                    'end_date': row['End Date'].strftime("%d %B %Y"),
+                                    'field': row['Field'],
+                                    'location': row['Location'],
+                                    'city': row['City'],
                                 }
                                 doc.render(context)
-                                filename = f"{clean_name.replace(' ', '_')}_Internship_Confirmation_{base_id}.docx"
+                                filename = f"{row['Name'].replace(' ', '_')}_Infonel_Internship_Acceptance_Letter.docx"
                                 filepath = os.path.join(tmpdir, filename)
                                 doc.save(filepath)
+
+                                # Convert to PDF
+                                pdf_filepath = filepath.replace('.docx', '.pdf')
+                                convert(filepath, pdf_filepath)
+
                                 zipf.write(filepath, arcname=filename)
-                                base_id += 1
+                                zipf.write(pdf_filepath, arcname=filename.replace('.docx', '.pdf'))
 
                         elif module == "Infonel - Intern Completion Letter":
                             df['Start Date'] = pd.to_datetime(df['Start Date'], format='%d %B %Y')
                             df['End Date'] = pd.to_datetime(df['End Date'], format='%d %B %Y')
-                            start_id = 501
-                            for i, row in df.iterrows():
+                            for _, row in df.iterrows():
                                 doc = DocxTemplate(template_file)
-                                certificate_id = f"INT/KVP{start_id + i:03d}"
                                 context = {
                                     'date': today_date,
-                                    'certificate_id': certificate_id,
                                     'name': row['Name'].title(),
                                     'roll_no': row['Roll No'],
-                                    'college': row['College Name'],
                                     'position': row['Position'],
-                                    'start_date': row['Start Date'].strftime('%d %B %Y'),
-                                    'end_date': row['End Date'].strftime('%d %B %Y'),
-                                    'work_description': row['Work Description'],
+                                    'start_date': row['Start Date'].strftime("%d %B %Y"),
+                                    'end_date': row['End Date'].strftime("%d %B %Y"),
                                 }
                                 doc.render(context)
-                                safe_id = certificate_id.replace("/", "_")
-                                filename = f"{row['Name'].replace(' ', '_')}_{safe_id}.docx"
+                                filename = f"{row['Name'].replace(' ', '_')}_Completion_Certificate.docx"
                                 filepath = os.path.join(tmpdir, filename)
                                 doc.save(filepath)
+
+                                # Convert to PDF
+                                pdf_filepath = filepath.replace('.docx', '.pdf')
+                                convert(filepath, pdf_filepath)
+
                                 zipf.write(filepath, arcname=filename)
+                                zipf.write(pdf_filepath, arcname=filename.replace('.docx', '.pdf'))
 
+                    # Download the zip file
                     with open(zip_path, "rb") as f:
-                        st.success("✅ Letters generated successfully!")
-                        st.download_button("\ud83d\udcc5 Download All Letters (ZIP)", data=f, file_name=f"{module.replace(' ', '_')}_Letters.zip")
-
+                        st.download_button(
+                            label="📥 Download ZIP with DOCX & PDF",
+                            data=f,
+                            file_name=f"{module.replace(' ', '_')}_Certificates.zip",
+                            mime="application/zip"
+                        )
     except Exception as e:
-        st.error(f"❌ Error: {e}")
+        st.error(f"Error: {e}")
