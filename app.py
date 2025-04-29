@@ -16,7 +16,7 @@ module = st.selectbox("Choose a Module", [
     "Getin - Intern Completion Letter",
     "Infonel - Intern Acceptance Letter",
     "Infonel - Intern Completion Letter",
-    "Payments Report Merge",
+    "Payments Report Mearge",
     "Amount Open Merge"
 ])
 
