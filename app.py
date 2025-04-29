@@ -16,13 +16,17 @@ module = st.selectbox("Choose a Module", [
     "Getin - Intern Completion Letter",
     "Infonel - Intern Acceptance Letter",
     "Infonel - Intern Completion Letter",
-    "Payments Report Merge"
+    "Payments Report Merge",
+    "Amount Open Merge"
 ])
 
 # Step 2: Upload files
 if module == "Payments Report Merge":
     invoice_file = st.file_uploader("Upload 'Invoices Report' Excel", type=["xlsx"], key="invoice_"+module)
     payment_file = st.file_uploader("Upload 'Payments Received' Excel", type=["xlsx"], key="payment_"+module)
+elif module == "Amount Open Merge":
+    invoice_file = st.file_uploader("Upload 'Invoices' Excel", type=["xlsx"], key="invoice_"+module)
+    report_file = st.file_uploader("Upload 'Invoices Report' Excel", type=["xlsx"], key="report_"+module)
 else:
     excel_file = st.file_uploader("Upload Excel File", type=["xlsx"], key="excel_"+module)
     template_file = st.file_uploader("Upload Word Template (DOCX)", type=["docx"], key="template_"+module)
@@ -120,6 +124,41 @@ if st.button("Generate"):
                                 filepath = os.path.join(tmpdir, filename)
                                 doc.save(filepath)
                                 zipf.write(filepath, arcname=filename)
+        elif module == "Amount Open Merge":
+            if not invoice_file or not report_file:
+                st.warning("Please upload both Invoices and Invoices Report files.")
+            else:
+                invoices_df = pd.read_excel(invoice_file, header=1)
+                report_df = pd.read_excel(report_file, header=1)
+
+                # Normalize column names
+                invoices_df.columns = invoices_df.columns.str.strip().str.lower()
+                report_df.columns = report_df.columns.str.strip().str.lower()
+
+                if 'invoice #' in invoices_df.columns and 'invoice #' in report_df.columns and 'amount open' in report_df.columns:
+                    merged_df = invoices_df.merge(
+                        report_df[['invoice #', 'amount open']],
+                        on='invoice #',
+                        how='left'
+                    )
+                    # Optional: Title-case columns
+                    merged_df.columns = [col.title() for col in merged_df.columns]
+
+                    with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as tmpfile:
+                        merged_df.to_excel(tmpfile.name, index=False)
+                        tmpfile.seek(0)
+                        with open(tmpfile.name, "rb") as f:
+                            st.success("✅ Merge complete!")
+                            st.download_button(
+                                label="📥 Download Merged Report",
+                                data=f,
+                                file_name="Invoices_With_Amount_Open.xlsx",
+                                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                            )
+                else:
+                    st.error("❌ Error: Required columns ('invoice #' and 'amount open') not found in both files.")
+
+                        
 
                         elif module == "Getin - Intern Acceptance":
                             df['Start Date'] = pd.to_datetime(df['Start Date'], format='%d %B %Y')
