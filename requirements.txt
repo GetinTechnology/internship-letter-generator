@@ -3,3 +3,4 @@ pandas
 python-docx
 docxtpl
 openpyxl
+docx2pdf
