@@ -126,7 +126,10 @@ if st.button("Generate"):
                     merged_df = invoices_df.merge(
                         report_df[['invoice #', 'amount open']],
                         on='invoice #', how='left')
-
+                    
+                    columns_to_remove = ['total tax', 'year', 'project', 'tags']
+                    merged_df.drop(columns=[col for col in columns_to_remove if col in merged_df.columns], inplace=True)
+                    
                     merged_df.columns = [col.title() for col in merged_df.columns]
 
                     with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as tmpfile:
