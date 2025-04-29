@@ -16,7 +16,7 @@ module = st.selectbox("Choose a Module", [
     "Getin - Intern Completion Letter",
     "Infonel - Intern Acceptance Letter",
     "Infonel - Intern Completion Letter",
-    "Payments Report Mearge",
+    "Payments Report Merge",
     "Amount Open Merge"
 ])
 
@@ -35,23 +35,10 @@ def get_pronouns(gender):
     if isinstance(gender, str):
         gender = gender.lower()
         if gender == "male":
-            return {
-                "pronoun_subject": "he",
-                "pronoun_object": "him",
-                "pronoun_possessive": "his",
-            }
+            return {"pronoun_subject": "he", "pronoun_object": "him", "pronoun_possessive": "his"}
         elif gender == "female":
-            return {
-                "pronoun_subject": "she",
-                "pronoun_object": "her",
-                "pronoun_possessive": "her",
-            }
-    # Default (for non-binary, unknown, or missing)
-    return {
-        "pronoun_subject": "they",
-        "pronoun_object": "them",
-        "pronoun_possessive": "their",
-    }
+            return {"pronoun_subject": "she", "pronoun_object": "her", "pronoun_possessive": "her"}
+    return {"pronoun_subject": "they", "pronoun_object": "them", "pronoun_possessive": "their"}
 
 if st.button("Generate"):
     try:
@@ -68,25 +55,50 @@ if st.button("Generate"):
                 if 'Invoice #' in invoices_df.columns and 'Invoice #' in payments_df.columns:
                     merged_df = payments_df.merge(
                         invoices_df[['Invoice #', 'Branch']],
-                        on='Invoice #',
-                        how='left'
-                    )
+                        on='Invoice #', how='left')
 
-                    # Create a temporary file to save the merged report
                     with tempfile.NamedTemporaryFile(delete=False, suffix='.xlsx') as tmpfile:
                         merged_df.to_excel(tmpfile.name, index=False)
                         tmpfile.seek(0)
-                        # Open the file and send its binary data to the download button
                         with open(tmpfile.name, "rb") as f:
                             st.success("✅ Merge complete!")
                             st.download_button(
-                                label="📥 Download Merged Report",
+                                label="📅 Download Merged Report",
                                 data=f,
                                 file_name="Payments_Received_With_Branch.xlsx",
-                                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                            )
+                                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
                 else:
                     st.error("❌ Error: 'Invoice #' column not found in both files.")
+
+        elif module == "Amount Open Merge":
+            if not invoice_file or not report_file:
+                st.warning("Please upload both Invoices and Invoices Report files.")
+            else:
+                invoices_df = pd.read_excel(invoice_file, header=1)
+                report_df = pd.read_excel(report_file, header=1)
+
+                invoices_df.columns = invoices_df.columns.str.strip().str.lower()
+                report_df.columns = report_df.columns.str.strip().str.lower()
+
+                if 'invoice #' in invoices_df.columns and 'invoice #' in report_df.columns and 'amount open' in report_df.columns:
+                    merged_df = invoices_df.merge(
+                        report_df[['invoice #', 'amount open']],
+                        on='invoice #', how='left')
+
+                    merged_df.columns = [col.title() for col in merged_df.columns]
+
+                    with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as tmpfile:
+                        merged_df.to_excel(tmpfile.name, index=False)
+                        tmpfile.seek(0)
+                        with open(tmpfile.name, "rb") as f:
+                            st.success("✅ Merge complete!")
+                            st.download_button(
+                                label="📅 Download Merged Report",
+                                data=f,
+                                file_name="Invoices_With_Amount_Open.xlsx",
+                                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                else:
+                    st.error("❌ Error: Required columns ('invoice #' and 'amount open') not found in both files.")
 
         else:
             if not excel_file or not template_file:
@@ -104,9 +116,7 @@ if st.button("Generate"):
                             df['End Date'] = pd.to_datetime(df['End Date'], format='%d %B %Y')
                             for _, row in df.iterrows():
                                 doc = DocxTemplate(template_file)
-
                                 pronouns = get_pronouns(row.get('Gender', ''))
-
                                 context = {
                                     'date': today_date,
                                     'name': row['Name'].title(),
@@ -115,8 +125,8 @@ if st.button("Generate"):
                                     'position': row['Position'],
                                     'start_date': row['Start Date'].strftime("%d %B %Y"),
                                     'end_date': row['End Date'].strftime("%d %B %Y"),
-                                     'pronoun_subject': pronouns['pronoun_subject'],
-                                     'pronoun_object': pronouns['pronoun_object'],
+                                    'pronoun_subject': pronouns['pronoun_subject'],
+                                    'pronoun_object': pronouns['pronoun_object'],
                                     'pronoun_possessive': pronouns['pronoun_possessive'],
                                 }
                                 doc.render(context)
@@ -124,41 +134,6 @@ if st.button("Generate"):
                                 filepath = os.path.join(tmpdir, filename)
                                 doc.save(filepath)
                                 zipf.write(filepath, arcname=filename)
-        elif module == "Amount Open Merge":
-            if not invoice_file or not report_file:
-                st.warning("Please upload both Invoices and Invoices Report files.")
-            else:
-                invoices_df = pd.read_excel(invoice_file, header=1)
-                report_df = pd.read_excel(report_file, header=1)
-
-                # Normalize column names
-                invoices_df.columns = invoices_df.columns.str.strip().str.lower()
-                report_df.columns = report_df.columns.str.strip().str.lower()
-
-                if 'invoice #' in invoices_df.columns and 'invoice #' in report_df.columns and 'amount open' in report_df.columns:
-                    merged_df = invoices_df.merge(
-                        report_df[['invoice #', 'amount open']],
-                        on='invoice #',
-                        how='left'
-                    )
-                    # Optional: Title-case columns
-                    merged_df.columns = [col.title() for col in merged_df.columns]
-
-                    with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as tmpfile:
-                        merged_df.to_excel(tmpfile.name, index=False)
-                        tmpfile.seek(0)
-                        with open(tmpfile.name, "rb") as f:
-                            st.success("✅ Merge complete!")
-                            st.download_button(
-                                label="📥 Download Merged Report",
-                                data=f,
-                                file_name="Invoices_With_Amount_Open.xlsx",
-                                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                            )
-                else:
-                    st.error("❌ Error: Required columns ('invoice #' and 'amount open') not found in both files.")
-
-                        
 
                         elif module == "Getin - Intern Acceptance":
                             df['Start Date'] = pd.to_datetime(df['Start Date'], format='%d %B %Y')
@@ -237,7 +212,7 @@ if st.button("Generate"):
 
                     with open(zip_path, "rb") as f:
                         st.success("✅ Letters generated successfully!")
-                        st.download_button("📥 Download All Letters (ZIP)", data=f, file_name=f"{module.replace(' ', '_')}_Letters.zip")
+                        st.download_button("\ud83d\udcc5 Download All Letters (ZIP)", data=f, file_name=f"{module.replace(' ', '_')}_Letters.zip")
 
     except Exception as e:
         st.error(f"❌ Error: {e}")
